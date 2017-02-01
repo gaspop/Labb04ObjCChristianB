@@ -22,9 +22,16 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8OO-2u-JzZ" customClass="Diagram">
-                                <rect key="frame" x="53" y="177" width="215" height="214"/>
+                                <rect key="frame" x="16" y="20" width="288" height="285"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="string" keyPath="diagramData">
+                                        <string key="value">Januari = 1, Februari = 2,   Mars=3,April=4, Maj   = 5   ,Juni   =6, Juli = 7,   Augusti=8,September=9,Oktober=10,November=11,December=12,</string>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="fillHeight" value="YES"/>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="fillWidth" value="YES"/>
+                                </userDefinedRuntimeAttributes>
                             </view>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
@@ -32,7 +39,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="45" y="-34.859154929577464"/>
+            <point key="canvasLocation" x="43.125" y="-35.91549295774648"/>
         </scene>
     </scenes>
 </document>

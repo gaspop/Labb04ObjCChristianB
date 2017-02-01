@@ -12,13 +12,13 @@ IB_DESIGNABLE
 @interface Diagram : UIView
 
 @property (nonatomic) NSArray* data;
+@property (nonatomic) IBInspectable NSString* diagramData;
+
+@property (nonatomic) IBInspectable BOOL fillWidth;
+@property (nonatomic) IBInspectable BOOL fillHeight;
 
 @property (nonatomic) float barWidth;
-@property (nonatomic) float barHeight;
 @property (nonatomic) float barGap;
-
-@property (nonatomic) float viewWidth;
-@property (nonatomic) float viewHeight;
 
 @property (nonatomic) float offsetX;
 @property (nonatomic) float offsetY;
