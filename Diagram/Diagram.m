@@ -23,6 +23,18 @@
 
 @implementation Diagram
 
+- (float)barWidth {
+    if (_barWidth <= 0.0f)
+        _barWidth = 20.0f;
+    
+    return _barWidth;
+}
+- (float)barSpacing {
+    if (_barSpacing < 0.0f)
+        _barSpacing = 0.0f;
+    
+    return _barSpacing;
+}
 - (float)barShare {
     return 4.0f;
 }
@@ -38,23 +50,11 @@
     self.viewHeight = rect.size.height - self.offsetY;
     
     self.maxBarHeight = 0.0f;
-    self.barWidth = 80.0f;
-    self.barGap = 5.0f;
-    
     self.barScaleX = 1.0f;
     self.barScaleY = 1.0f;
     
     //self.fillWidth = NO;
     //self.fillHeight = NO;
-
-    [self convertData];
-    
-    /*
-    self.data = @[@{@"name": @"january", @"value": @100},
-                  @{@"name": @"february", @"value": @80},
-                  @{@"name": @"mars", @"value": @130},
-                  @{@"name": @"april", @"value": @80},
-                  @{@"name": @"maj", @"value": @20}];*/
     
     self.barCount = self.data.count;
 
@@ -68,7 +68,7 @@
 
     //Draw bars
     [[UIColor blackColor] setStroke];
-    float drawPosX = self.barGap + self.offsetX;
+    float drawPosX = self.barSpacing + self.offsetX;
     float drawPosY;
     for (int i = 0; i < self.barCount; i ++) {
         drawPosY = self.viewHeight - ([self.data[i][@"value"] floatValue] * self.barScaleY);
@@ -94,7 +94,7 @@
         CGRect textBox = CGRectMake(drawPosX, self.viewHeight, drawWidth, self.offsetY);
         [text drawInRect:textBox withAttributes: attribute];
         
-        drawPosX += self.barWidth + self.barGap;
+        drawPosX += self.barWidth + self.barSpacing;
     }
     
     //Axis
@@ -117,7 +117,7 @@
     [self calculateBarWidth];
     [self calculateBarHeight];
     
-    if (((self.barGap +1) * self.barCount) + (self.barWidth * self.barCount) > self.viewWidth) {
+    if (((self.barSpacing +1) * self.barCount) + (self.barWidth * self.barCount) > self.viewWidth) {
         NSLog(@"Error: Content width exceeds view canvas.");
         NSLog(@"'fillWidth' activated.");
         self.fillWidth = YES;
@@ -128,8 +128,8 @@
 - (void)calculateBarWidth {
     NSLog(@"calculateBarWidth");
     if (self.fillWidth) {
-        self.barGap = ((self.viewWidth / self.barShare) / (self.barCount));
-        self.barWidth = (self.viewWidth - (self.barGap * (self.barCount +1))) / (self.barCount);
+        self.barSpacing = ((self.viewWidth / self.barShare) / (self.barCount));
+        self.barWidth = (self.viewWidth - (self.barSpacing * (self.barCount +1))) / (self.barCount);
     }
 }
 
@@ -137,38 +137,31 @@
     NSLog(@"calculateBarHeight");
     if (!self.fillHeight)
         self.maxBarHeight = self.viewHeight;
-    
-    //NSLog(@"maxBarHeight Before: %f", self.maxBarHeight);
+
     for (int i = 0; i < self.barCount; i ++) {
         self.maxBarHeight = MAX(self.maxBarHeight, [self.data[i][@"value"] floatValue]);
         self.barScaleY = self.viewHeight / self.maxBarHeight;
     }
-    
-    //NSLog(@"maxBarHeight After: %f", self.maxBarHeight);
-    //NSLog(@"barScaleY: %f", self.barScaleY);
 }
 
-- (void)setDiagramData:(NSString*) input {
-    _diagramData = input;
-    [self convertData];
+- (void)setTableInput:(NSString*) input {
+    _tableInput = input;
+    NSLog(@"New table data input.");
+    [self convertInputToTableData];
 }
 
-- (void)convertData {
+- (void)convertInputToTableData {
     NSMutableArray* newData = [[NSMutableArray alloc] init];
-    NSMutableArray* components = [[self.diagramData componentsSeparatedByString:@","] mutableCopy];
+    NSMutableArray* components = [[self.tableInput componentsSeparatedByString:@","] mutableCopy];
     for (int i = 0; i < components.count; i ++) {
-        NSLog(@"Index %d, before: '%@'", i, components[i]);
         components[i] = [components[i] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
-        NSLog(@"Index %d, after : '%@'", i, components[i]);
-        NSLog(@"Index %d, length: %ld", i, (long) [components[i] length]);
         if ([components[i] length] == 0 || components[i] == nil) {
             [components removeObjectAtIndex:i];
             i--;
         }
     }
-    NSLog(@"Array count %ld: ", (long) components.count);
     for (int i = 0; i < components.count; i ++) {
-        NSDictionary *data = [self convertStringToTableData:components[i]];
+        NSDictionary *data = [self convertStringToTableEntryData:components[i]];
         if (data) {
             [newData addObject:data];
         } else {
@@ -178,11 +171,9 @@
         }
     }
     self.data = newData;
-    [self setNeedsDisplay];
-    //NSArray *text = [self.data componentsSeparatedByString:@","];
 }
 
-- (NSDictionary*)convertStringToTableData:(NSString*)string {
+- (NSDictionary*)convertStringToTableEntryData:(NSString*)string {
     NSCharacterSet *set = [NSCharacterSet whitespaceCharacterSet];
     NSMutableArray *components = [[string componentsSeparatedByString:@"="] mutableCopy];
     for (int i = 0; i < components.count; i++) {
@@ -202,8 +193,22 @@
     }
 }
 
+- (void)validateData {
+    for (int i = 0; i < self.data.count; i ++) {
+        if (!self.data[i][@"name"] || !self.data[i][@"value"]) {
+            NSLog(@"Invalid data found at index: %d", i);
+            self.data = [[NSArray alloc] init];
+            return;
+        }
+    }
+    NSLog(@"Table data is valid.");
+}
+
 - (void)setData:(NSArray*)data {
     _data = data;
+    NSLog(@"New table data set.");
+    [self validateData];
+    [self setNeedsDisplay];
 }
 
 @end
