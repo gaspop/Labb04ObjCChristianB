@@ -39,6 +39,19 @@
     return 4.0f;
 }
 
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        self.tableInput = @"År 1=2000, År 2=1760, År 3 =980, År 4=2250";
+        self.fillWidth = YES;
+        self.fillHeight = YES;
+        self.barWidth = 20.0f;
+        self.barSpacing = 10.0f;
+    }
+    return self;
+}
+
 // Only override drawRect: if you perform custom drawing.
 // An empty implementation adversely affects performance during animation.
 - (void)drawRect:(CGRect)rect {
@@ -66,7 +79,12 @@
     [[UIColor whiteColor] setFill];
     [diagram fill];
 
-    //Draw bars
+    [self drawTableBars];
+    [self drawTableBarText];
+    [self drawTableAxisLines];
+}
+
+- (void)drawTableBars {
     [[UIColor blackColor] setStroke];
     float drawPosX = self.barSpacing + self.offsetX;
     float drawPosY;
@@ -84,8 +102,34 @@
         [bar fill];
         [bar stroke];
         
+        drawPosX += self.barWidth + self.barSpacing;
+    }
+}
+
+- (void)drawTableBarText {
+    //
+    UIFont *font = [UIFont fontWithName:@"Helvetica" size:14];
+    /*CGSize size = [text sizeWithFont:font];
+    if (size.width < rect.size.width)
+    {
+        CGRect r = CGRectMake(rect.origin.x,
+                              rect.origin.y + (rect.size.height - size.height)/2,
+                              rect.size.width,
+                              (rect.size.height - size.height)/2);
+        [text drawInRect:r withFont:font lineBreakMode:UILineBreakModeClip alignment:UITextAlignmentLeft];
+    }
+    */
+    [[UIColor blackColor] setStroke];
+    float drawPosX = self.barSpacing + self.offsetX;
+    float drawPosY;
+    for (int i = 0; i < self.barCount; i ++) {
+        drawPosY = self.viewHeight - ([self.data[i][@"value"] floatValue] * self.barScaleY);
+        float drawWidth = self.barWidth * self.barScaleX;
+        float drawHeight = [self.data[i][@"value"] floatValue] * self.barScaleY;
+        
         //Get text
         NSString* text = self.data[i][@"name"];
+        CGSize size = [text sizeWithFont:font];
         //Center text
         NSMutableParagraphStyle *style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
         style.alignment = NSTextAlignmentCenter;
@@ -96,8 +140,9 @@
         
         drawPosX += self.barWidth + self.barSpacing;
     }
-    
-    //Axis
+}
+
+- (void)drawTableAxisLines {
     CGMutablePathRef axisPath = CGPathCreateMutable();
     CGPathMoveToPoint(axisPath, NULL, self.offsetX, 0);
     CGPathAddLineToPoint(axisPath, NULL, self.offsetX, self.viewHeight);
@@ -106,11 +151,7 @@
     [[UIColor blackColor] setStroke];
     line.lineWidth = 2;
     [line stroke];
-    CGPathRelease(axisPath),
-    
-    //Outline
-    [[UIColor blackColor] setStroke];
-    //[diagram stroke];
+    CGPathRelease(axisPath);
 }
 
 - (void)calculateBarDimensions {

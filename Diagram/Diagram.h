@@ -11,8 +11,8 @@
 IB_DESIGNABLE
 @interface Diagram : UIView
 
-@property (nonatomic) NSArray* data;
-@property (nonatomic) IBInspectable NSString* tableInput;
+@property (nonatomic) NSArray *data;
+@property (nonatomic) IBInspectable NSString *tableInput;
 
 @property (nonatomic) IBInspectable BOOL fillWidth;
 @property (nonatomic) IBInspectable BOOL fillHeight;
@@ -27,5 +27,12 @@ IB_DESIGNABLE
 @property (nonatomic) UIColor *frameColor;
 @property (nonatomic) UIColor *barColor;
 
+typedef enum Colors Colors;
+
+enum Colors {
+    Red,
+    Green,
+    Blue
+};
 
 @end
