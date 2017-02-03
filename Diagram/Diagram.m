@@ -10,8 +10,10 @@
 
 @interface Diagram ()
 
+
 @property (nonatomic) float viewWidth;
 @property (nonatomic) float viewHeight;
+@property (nonatomic) long maxTextLength;
 @property (nonatomic) float maxBarHeight;
 @property (nonatomic) float barScaleX;
 @property (nonatomic) float barScaleY;
@@ -22,6 +24,8 @@
 
 
 @implementation Diagram
+
+//NSArray* _barColors;
 
 - (float)barWidth {
     if (_barWidth <= 0.0f)
@@ -38,18 +42,51 @@
 - (float)barShare {
     return 4.0f;
 }
+/*
+- (NSArray*)barColors {
+    if (!_barColors) {
+        _barColors = @[[UIColor redColor]];
+    }
+    
+    return _barColors;
+}
+*/
+- (void)setBarColors:(NSArray *)colors {
+    if (!colors || ![colors[0] isKindOfClass:[UIColor class]]) {
+        _barColors = @[[UIColor redColor]];
+    }
+    else
+        _barColors = colors;
+}
+
 
 - (instancetype)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
     if (self) {
-        self.tableInput = @"År 1=2000, År 2=1760, År 3 =980, År 4=2250";
-        self.fillWidth = YES;
-        self.fillHeight = YES;
-        self.barWidth = 20.0f;
-        self.barSpacing = 10.0f;
+        [self initCommon];
     }
     return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)coder
+{
+    self = [super initWithCoder:coder];
+    if (self) {
+        [self initCommon];
+    }
+    return self;
+}
+
+- (void)initCommon {
+    self.tableInput = @"År 1=2000, År 2=1760, År 3 =980, År 4=2250";
+    self.fillWidth = YES;
+    self.fillHeight = YES;
+    self.barWidth = 20.0f;
+    self.barSpacing = 10.0f;
+    self.barColors = @[[UIColor redColor], [UIColor blueColor]];
+    self.colorMode = FadeBetweenTwoColors;
+
 }
 
 // Only override drawRect: if you perform custom drawing.
@@ -72,6 +109,7 @@
     self.barCount = self.data.count;
 
     [self calculateBarDimensions];
+    [self calculateBarTextLength];
     
     //Background
     CGRect background = CGRectMake(0,0,rect.size.width, rect.size.height);
@@ -80,8 +118,37 @@
     [diagram fill];
 
     [self drawTableBars];
-    [self drawTableBarText];
+    //[self drawTableBarText];
     [self drawTableAxisLines];
+}
+
+- (UIColor*)pickTableBarColor:(int)fromBarIndex {
+    if (self.colorMode == OneColor) {
+        return self.barColors[0];
+    }
+    else if (self.colorMode == CycleThroughColors) {
+        return self.barColors[fromBarIndex % self.barColors.count];
+    }
+    else if (self.colorMode == FadeBetweenTwoColors) {
+        if (self.barCount <= 1 || self.barColors.count <= 1) {
+            return self.barColors[0];
+        }
+        else {
+            UIColor *startColor = self.barColors[0];
+            UIColor *endColor = self.barColors[1];
+            const CGFloat *startValues  = CGColorGetComponents(startColor.CGColor);
+            const CGFloat *endValues = CGColorGetComponents(endColor.CGColor);
+            double diffRed = endValues[0] - startValues[0];
+            double diffGreen = endValues[1] - startValues[1];
+            double diffBlue = endValues[2] - startValues[2];
+            double scale = (fromBarIndex + 0.0f) / (self.barCount -1.0f);
+            double red = startValues[0] + (diffRed * scale);
+            double green = startValues[1] + (diffGreen * scale);
+            double blue = startValues[2] + (diffBlue * scale);
+            return [UIColor colorWithRed:red green:green blue:blue alpha:1.0];
+        }
+    }
+    return self.barColors[0];
 }
 
 - (void)drawTableBars {
@@ -95,51 +162,30 @@
         
         CGRect barRect = CGRectMake(drawPosX, drawPosY, drawWidth, drawHeight);
         UIBezierPath *bar = [UIBezierPath bezierPathWithRect:barRect];
-        if (i % 2 == 0)
-            [[UIColor redColor] setFill];
-        else
-            [[UIColor blueColor] setFill];
+        [[self pickTableBarColor: i] setFill];
         [bar fill];
         [bar stroke];
+        
+        NSString* text = self.data[i][@"name"];
+        CGRect textRect = CGRectMake(drawPosX, self.viewHeight, drawWidth, self.offsetY);
+        [self drawText:[text substringToIndex:MIN(text.length, self.maxTextLength)] inRect:textRect];
         
         drawPosX += self.barWidth + self.barSpacing;
     }
 }
 
-- (void)drawTableBarText {
-    //
-    UIFont *font = [UIFont fontWithName:@"Helvetica" size:14];
-    /*CGSize size = [text sizeWithFont:font];
-    if (size.width < rect.size.width)
-    {
-        CGRect r = CGRectMake(rect.origin.x,
-                              rect.origin.y + (rect.size.height - size.height)/2,
-                              rect.size.width,
-                              (rect.size.height - size.height)/2);
-        [text drawInRect:r withFont:font lineBreakMode:UILineBreakModeClip alignment:UITextAlignmentLeft];
-    }
-    */
-    [[UIColor blackColor] setStroke];
-    float drawPosX = self.barSpacing + self.offsetX;
-    float drawPosY;
-    for (int i = 0; i < self.barCount; i ++) {
-        drawPosY = self.viewHeight - ([self.data[i][@"value"] floatValue] * self.barScaleY);
-        float drawWidth = self.barWidth * self.barScaleX;
-        float drawHeight = [self.data[i][@"value"] floatValue] * self.barScaleY;
-        
-        //Get text
-        NSString* text = self.data[i][@"name"];
-        CGSize size = [text sizeWithFont:font];
-        //Center text
-        NSMutableParagraphStyle *style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
-        style.alignment = NSTextAlignmentCenter;
-        NSDictionary *attribute = [NSDictionary dictionaryWithObject:style forKey:NSParagraphStyleAttributeName];
-        //Draw text
-        CGRect textBox = CGRectMake(drawPosX, self.viewHeight, drawWidth, self.offsetY);
-        [text drawInRect:textBox withAttributes: attribute];
-        
-        drawPosX += self.barWidth + self.barSpacing;
-    }
+- (void)drawText:(NSString*)text inRect:(CGRect)rect {
+    NSMutableParagraphStyle *style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+    style.alignment = NSTextAlignmentCenter;
+    style.lineBreakMode = NSLineBreakByClipping;
+    NSDictionary *attribute = [NSDictionary dictionaryWithObject:style forKey:NSParagraphStyleAttributeName];
+    
+    CGSize size = [text sizeWithAttributes:attribute];
+    CGRect newRect = CGRectMake(rect.origin.x,
+                                rect.origin.y + (rect.size.height - size.height)/2,
+                                rect.size.width,
+                                size.height);
+    [text drawInRect:newRect withAttributes:attribute];
 }
 
 - (void)drawTableAxisLines {
@@ -185,6 +231,27 @@
     }
 }
 
+- (void)calculateBarTextLength {
+    NSString* text;
+    long maxLength = 0;
+    for (int i = 0; i < self.barCount; i ++) {
+        if ([self.data[i][@"name"] length] > maxLength) {
+            maxLength = [self.data[i][@"name"] length];
+            text = self.data[i][@"name"];
+        }
+    }
+    CGSize size = [text sizeWithAttributes:nil];
+    if (size.width > self.barWidth) {
+        text = [text substringToIndex:MIN(3, text.length)];
+        size = [text sizeWithAttributes:nil];
+        while (size.width > self.barWidth && text.length > 1) {
+            text = [text substringToIndex:(text.length -1)];
+            size = [text sizeWithAttributes:nil];
+        }
+    }
+    self.maxTextLength = text.length;
+}
+
 - (void)setTableInput:(NSString*) input {
     _tableInput = input;
     NSLog(@"New table data input.");
@@ -193,7 +260,7 @@
 
 - (void)convertInputToTableData {
     NSMutableArray* newData = [[NSMutableArray alloc] init];
-    NSMutableArray* components = [[self.tableInput componentsSeparatedByString:@","] mutableCopy];
+    NSMutableArray* components = [[self.tableInput componentsSeparatedByString:@";"] mutableCopy];
     for (int i = 0; i < components.count; i ++) {
         components[i] = [components[i] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
         if ([components[i] length] == 0 || components[i] == nil) {

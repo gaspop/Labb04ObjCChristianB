@@ -25,14 +25,20 @@ IB_DESIGNABLE
 
 @property (nonatomic) UIColor *backgroundColor;
 @property (nonatomic) UIColor *frameColor;
-@property (nonatomic) UIColor *barColor;
+@property (nonatomic) NSArray *barColors;
 
-typedef enum Colors Colors;
+@property (nonatomic) enum ColorMode colorMode;
 
-enum Colors {
-    Red,
-    Green,
-    Blue
+//@property (nonatomic) UIColor *barColor;
+
+//- (void)setBarColors:(NSArray*)colors;
+
+typedef enum ColorMode ColorMode;
+
+enum ColorMode {
+    OneColor = 0,
+    CycleThroughColors = 1,
+    FadeBetweenTwoColors = 2
 };
 
 @end
