@@ -17,11 +17,13 @@ IB_DESIGNABLE
 @property (nonatomic) IBInspectable BOOL fillWidth;
 @property (nonatomic) IBInspectable BOOL fillHeight;
 
+@property (nonatomic) IBInspectable BOOL enableSpacing;
+
 @property (nonatomic) IBInspectable float barWidth;
 @property (nonatomic) IBInspectable float barSpacing;
 
-@property (nonatomic) float offsetX;
-@property (nonatomic) float offsetY;
+@property (nonatomic) IBInspectable float tableValuePadding;
+@property (nonatomic) IBInspectable float tableTextPadding;
 
 @property (nonatomic) UIColor *backgroundColor;
 @property (nonatomic) UIColor *frameColor;
@@ -29,9 +31,7 @@ IB_DESIGNABLE
 
 @property (nonatomic) enum ColorMode colorMode;
 
-//@property (nonatomic) UIColor *barColor;
-
-//- (void)setBarColors:(NSArray*)colors;
+- (void)update;
 
 typedef enum ColorMode ColorMode;
 

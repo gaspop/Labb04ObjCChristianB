@@ -10,47 +10,67 @@
 
 @interface Diagram ()
 
-
+@property (nonatomic) float offsetX;
+@property (nonatomic) float offsetY;
 @property (nonatomic) float viewWidth;
 @property (nonatomic) float viewHeight;
+@property (nonatomic) float maxTextHeight;
+@property (nonatomic) float maxTextWidth;
 @property (nonatomic) long maxTextLength;
+@property (nonatomic) float maxValue;
 @property (nonatomic) float maxBarHeight;
 @property (nonatomic) float barScaleX;
 @property (nonatomic) float barScaleY;
-@property (nonatomic) float barShare;
+@property (nonatomic) float barSpacingShare;
 @property (nonatomic) long barCount;
+@property (nonatomic) int valuePrintFrequency;
 
 @end
 
 
 @implementation Diagram
 
-//NSArray* _barColors;
+- (void)setBarWidth:(float)width {
+    _barWidth = MAX(1,width);
+}
+- (void)setBarSpacing:(float)spacing {
+    _barSpacing = MAX(0,spacing);
+}
 
-- (float)barWidth {
-    if (_barWidth <= 0.0f)
-        _barWidth = 20.0f;
-    
-    return _barWidth;
+- (void)setTableTextPadding:(float)padding {
+    float maxAllowed = self.bounds.size.height * 0.9f;
+    _tableTextPadding = MAX(0,MIN(padding, maxAllowed));
 }
-- (float)barSpacing {
-    if (_barSpacing < 0.0f)
-        _barSpacing = 0.0f;
-    
-    return _barSpacing;
+- (void)setTableValuePadding:(float)padding {
+    float maxAllowed = self.bounds.size.width * 0.5f;
+    _tableValuePadding = MAX(0,MIN(padding, maxAllowed));
 }
-- (float)barShare {
+- (float)barSpacingShare {
     return 4.0f;
 }
-/*
-- (NSArray*)barColors {
-    if (!_barColors) {
-        _barColors = @[[UIColor redColor]];
-    }
-    
-    return _barColors;
+- (float)maxTextHeight {
+    CGSize size = [(@"Å") sizeWithAttributes:nil];
+    return size.height;
 }
-*/
+- (float)maxTextWidth {
+    CGSize size = [[NSString stringWithFormat:@"%d",(int) roundf(self.maxValue)] sizeWithAttributes:nil];
+    NSLog(@"maxTextWidth: %f", size.width);
+    return size.width;
+}
+- (float)maxValue {
+    float max = 0.0f;
+    for (int i = 0; i < self.data.count; i ++) {
+        max = MAX(max, [self.data[i][@"value"] floatValue]);
+    }
+    NSLog(@"maxValue: %f", max);
+    return max;
+}
+- (float)offsetX {
+    return self.maxTextWidth + self.tableValuePadding;
+}
+- (float)offsetY {
+    return self.maxTextHeight * 0.5f;
+}
 - (void)setBarColors:(NSArray *)colors {
     if (!colors || ![colors[0] isKindOfClass:[UIColor class]]) {
         _barColors = @[[UIColor redColor]];
@@ -59,6 +79,9 @@
         _barColors = colors;
 }
 
+- (void)update{
+    [self setNeedsDisplay];
+}
 
 - (instancetype)initWithFrame:(CGRect)frame
 {
@@ -79,9 +102,12 @@
 }
 
 - (void)initCommon {
-    self.tableInput = @"År 1=2000, År 2=1760, År 3 =980, År 4=2250";
+    self.tableInput = @"År 1=2000; År 2=1760; År 3 =980; År 4=2250;";
     self.fillWidth = YES;
     self.fillHeight = YES;
+    self.enableSpacing = YES;
+    self.tableValuePadding = 0.0f;
+    self.tableTextPadding = 0.0f;
     self.barWidth = 20.0f;
     self.barSpacing = 10.0f;
     self.barColors = @[[UIColor redColor], [UIColor blueColor]];
@@ -92,19 +118,13 @@
 // Only override drawRect: if you perform custom drawing.
 // An empty implementation adversely affects performance during animation.
 - (void)drawRect:(CGRect)rect {
-
-    self.offsetX = 0.0f;
-    self.offsetY = 20.0f;
     
     self.viewWidth = rect.size.width - self.offsetX;
-    self.viewHeight = rect.size.height - self.offsetY;
-    
+    self.viewHeight = rect.size.height - self.tableTextPadding - self.maxTextHeight;
+
     self.maxBarHeight = 0.0f;
     self.barScaleX = 1.0f;
     self.barScaleY = 1.0f;
-    
-    //self.fillWidth = NO;
-    //self.fillHeight = NO;
     
     self.barCount = self.data.count;
 
@@ -118,7 +138,7 @@
     [diagram fill];
 
     [self drawTableBars];
-    //[self drawTableBarText];
+    [self drawTableValues];
     [self drawTableAxisLines];
 }
 
@@ -153,7 +173,7 @@
 
 - (void)drawTableBars {
     [[UIColor blackColor] setStroke];
-    float drawPosX = self.barSpacing + self.offsetX;
+    float drawPosX = (self.enableSpacing * self.barSpacing) + self.maxTextWidth + self.tableValuePadding;
     float drawPosY;
     for (int i = 0; i < self.barCount; i ++) {
         drawPosY = self.viewHeight - ([self.data[i][@"value"] floatValue] * self.barScaleY);
@@ -167,10 +187,10 @@
         [bar stroke];
         
         NSString* text = self.data[i][@"name"];
-        CGRect textRect = CGRectMake(drawPosX, self.viewHeight, drawWidth, self.offsetY);
+        CGRect textRect = CGRectMake(drawPosX, self.viewHeight, drawWidth, self.maxTextHeight + self.tableTextPadding);
         [self drawText:[text substringToIndex:MIN(text.length, self.maxTextLength)] inRect:textRect];
         
-        drawPosX += self.barWidth + self.barSpacing;
+        drawPosX += self.barWidth + (self.enableSpacing * self.barSpacing);
     }
 }
 
@@ -188,11 +208,31 @@
     [text drawInRect:newRect withAttributes:attribute];
 }
 
+- (void)drawTableValues {
+    float value = self.viewHeight;
+    if (self.barScaleY >= 1.0f)
+        value = self.maxValue;
+    
+    float space = self.bounds.size.height - (self.maxTextHeight * 1.5) - self.tableTextPadding;
+    float iterations = roundf(space / (self.maxTextHeight * 2));
+    float increment = value / iterations;
+    
+    float drawY = 0;
+    for (int i = 0; i <= iterations; i ++) {
+        NSString *text = [NSString stringWithFormat:@"%d", (int) roundf(value)];
+        CGRect rect = CGRectMake(0, drawY, self.offsetX, self.maxTextHeight);
+        [self drawText:text inRect:rect];
+        value -= increment;
+        drawY += self.maxTextHeight*2;
+    }
+    
+}
+
 - (void)drawTableAxisLines {
     CGMutablePathRef axisPath = CGPathCreateMutable();
     CGPathMoveToPoint(axisPath, NULL, self.offsetX, 0);
     CGPathAddLineToPoint(axisPath, NULL, self.offsetX, self.viewHeight);
-    CGPathAddLineToPoint(axisPath, NULL, self.viewWidth, self.viewHeight);
+    CGPathAddLineToPoint(axisPath, NULL, self.viewWidth + self.offsetX, self.viewHeight);
     UIBezierPath *line = [UIBezierPath bezierPathWithCGPath:axisPath];
     [[UIColor blackColor] setStroke];
     line.lineWidth = 2;
@@ -204,24 +244,23 @@
     [self calculateBarWidth];
     [self calculateBarHeight];
     
-    if (((self.barSpacing +1) * self.barCount) + (self.barWidth * self.barCount) > self.viewWidth) {
-        NSLog(@"Error: Content width exceeds view canvas.");
-        NSLog(@"'fillWidth' activated.");
+    float barSpacing = self.enableSpacing * ((self.barSpacing +1) * self.barCount);
+    float barWidth = self.barWidth * self.barCount;
+    if (barSpacing + barWidth > self.viewWidth) {
+        NSLog(@"Error: Content width exceeds view canvas, enabling Fill Width.");
         self.fillWidth = YES;
         [self calculateBarWidth];
     }
 }
 
 - (void)calculateBarWidth {
-    NSLog(@"calculateBarWidth");
     if (self.fillWidth) {
-        self.barSpacing = ((self.viewWidth / self.barShare) / (self.barCount));
+        self.barSpacing = self.enableSpacing * ((self.viewWidth / self.barSpacingShare) / (self.barCount));
         self.barWidth = (self.viewWidth - (self.barSpacing * (self.barCount +1))) / (self.barCount);
     }
 }
 
 - (void)calculateBarHeight {
-    NSLog(@"calculateBarHeight");
     if (!self.fillHeight)
         self.maxBarHeight = self.viewHeight;
 
@@ -235,19 +274,21 @@
     NSString* text;
     long maxLength = 0;
     for (int i = 0; i < self.barCount; i ++) {
-        if ([self.data[i][@"name"] length] > maxLength) {
-            maxLength = [self.data[i][@"name"] length];
-            text = self.data[i][@"name"];
+        NSString* current = self.data[i][@"name"];
+        if (current.length > maxLength) {
+            text = current;
+            maxLength = text.length;
         }
     }
     CGSize size = [text sizeWithAttributes:nil];
     if (size.width > self.barWidth) {
-        text = [text substringToIndex:MIN(3, text.length)];
-        size = [text sizeWithAttributes:nil];
-        while (size.width > self.barWidth && text.length > 1) {
-            text = [text substringToIndex:(text.length -1)];
+        do {
+            if (text.length > 3)
+                text = [text substringToIndex:MIN(3, text.length)];
+            else
+                text = [text substringToIndex:(text.length -1)];
             size = [text sizeWithAttributes:nil];
-        }
+        } while (size.width > self.barWidth && text.length > 1);
     }
     self.maxTextLength = text.length;
 }
@@ -273,7 +314,7 @@
         if (data) {
             [newData addObject:data];
         } else {
-            NSLog(@"Bad data found in array!");
+            NSLog(@"Bad data found in input text!");
             self.data = [[NSArray alloc] init];
             return;
         }
@@ -316,7 +357,7 @@
     _data = data;
     NSLog(@"New table data set.");
     [self validateData];
-    [self setNeedsDisplay];
+    [self update];
 }
 
 @end
