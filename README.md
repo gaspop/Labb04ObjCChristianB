@@ -21,3 +21,11 @@ VG
 - Skalan på diagrammet ska sättas automatisk baserat på den högsta stapeln (så att den når toppen av vyn)
 - Staplarnas bredd ska anpassas efter vyns bredd
 - Staplarna ska få olika färger utifrån en fördefinierad färgskala (t.ex. varannan ljus / mörk)
+
+
+Framtida möjliga ändringar:
+- Städa upp
+- Mer inställningar
+    * Möjlighet att stänga av visning av text och värden.
+    * Mer specifika färginställningar på olika element.
+    * Möjlighet att rita ut vågräta linjer från värdena över diagrammet som mäthjälp.
