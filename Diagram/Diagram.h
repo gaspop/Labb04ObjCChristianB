@@ -16,17 +16,18 @@ IB_DESIGNABLE
 
 @property (nonatomic) IBInspectable BOOL fillWidth;
 @property (nonatomic) IBInspectable BOOL fillHeight;
-
 @property (nonatomic) IBInspectable BOOL enableSpacing;
 
 @property (nonatomic) IBInspectable float barWidth;
 @property (nonatomic) IBInspectable float barSpacing;
-
 @property (nonatomic) IBInspectable float tableValuePadding;
 @property (nonatomic) IBInspectable float tableTextPadding;
 
+@property (nonatomic) IBInspectable BOOL drawBarOutline;
+
 @property (nonatomic) UIColor *backgroundColor;
 @property (nonatomic) UIColor *frameColor;
+@property (nonatomic) UIColor *textColor;
 @property (nonatomic) NSArray *barColors;
 
 @property (nonatomic) enum ColorMode colorMode;

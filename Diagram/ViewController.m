@@ -20,9 +20,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
-    
-    //self.table1.barColors = @[[UIColor greenColor]];
-    
+        
     self.table2.data = @[@{@"name": @"january", @"value": @100},
                         @{@"name": @"february", @"value": @80},
                         @{@"name": @"mars", @"value": @130},

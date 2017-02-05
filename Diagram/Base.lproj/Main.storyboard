@@ -22,7 +22,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rWo-5F-5td" customClass="Diagram">
-                                <rect key="frame" x="16" y="28" width="288" height="240"/>
+                                <rect key="frame" x="16" y="28" width="288" height="265"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <userDefinedRuntimeAttributes>
@@ -39,19 +39,25 @@
                                     </userDefinedRuntimeAttribute>
                                     <userDefinedRuntimeAttribute type="boolean" keyPath="enableSpacing" value="YES"/>
                                     <userDefinedRuntimeAttribute type="number" keyPath="tableValuePadding">
-                                        <real key="value" value="0.0"/>
+                                        <real key="value" value="4"/>
                                     </userDefinedRuntimeAttribute>
                                     <userDefinedRuntimeAttribute type="number" keyPath="tableTextPadding">
                                         <real key="value" value="2"/>
                                     </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="drawBarOutline" value="YES"/>
                                 </userDefinedRuntimeAttributes>
                             </view>
                             <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mVF-bT-UBH" customClass="Diagram">
-                                <rect key="frame" x="16" y="276" width="288" height="164"/>
+                                <rect key="frame" x="16" y="357" width="288" height="191"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <userDefinedRuntimeAttributes>
                                     <userDefinedRuntimeAttribute type="boolean" keyPath="fillWidth" value="YES"/>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="fillHeight" value="YES"/>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="tableValuePadding">
+                                        <real key="value" value="8"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="drawBarOutline" value="YES"/>
                                 </userDefinedRuntimeAttributes>
                             </view>
                         </subviews>
@@ -64,7 +70,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="43.125" y="-35.91549295774648"/>
+            <point key="canvasLocation" x="46.875" y="-16.901408450704224"/>
         </scene>
     </scenes>
 </document>
